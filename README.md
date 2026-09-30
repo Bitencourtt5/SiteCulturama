@@ -48,10 +48,16 @@ A página é uma **Single-Page Application (SPA)** responsiva e de alta convers�
    - *Recomendação por Interesse & Push Notifications*
    - *Rotas até o Evento (Metrô, Carro, A Pé e Bike)*
    - *Curadoria & Verificação por CNPJ/CPF*
-5. **Simulação Interativa do Mapa (Explorer):**
-   - Filtros por categoria (*Música & Shows*, *Artes Visuais*, *Teatro & Dança*, *Gastronomia*, *Cinema*).
-   - Campo de busca em tempo real.
-   - Sidebar interativa com detalhes completos do evento selecionado, organizador verificado e tempo de trajeto de metrô/carro.
+5. **Mapa Real Interativo com Leaflet & OpenStreetMap (Sem necessidade de Chave de API):**
+   - **Mapeamento Real de Ruas & Bairros:** Integração via **Leaflet.js** com camadas em alta definição (*CartoDB Dark Matter*, *OSM Hot* e *CartoDB Voyager*), sem cobranças, sem limites e 100% compatível com o GitHub Pages.
+   - **Detecção do GPS Real do Usuário (`navigator.geolocation`):** Botão *"Usar Meu GPS Real"* que localiza o usuário pelo navegador/celular e posiciona o radar dinâmico no local exato onde ele está.
+   - **Modo Demonstração (Av. Paulista):** Atalho instantâneo para centrar na Avenida Paulista (MASP) para testes rápidos de curadoria cultural.
+   - **Cálculo Geodésico Real (Haversine):** Cálculo preciso de distâncias reais em km entre a posição do usuário e cada polo cultural.
+   - **Traçado de Rota Dinâmica:** Linha geodésica pontilhada em néon terracota conectando a localização do usuário ao evento ativo.
+   - **Controle Dinâmico de Raio de Busca:** Slider de 1 km a 25 km com visualização de círculo geográfico real que filtra eventos em tempo real.
+   - **Seleção Multimodal de Transporte:** Rotas e estimativas por 🚇 *Metrô*, 🚗 *Carro*, 🚶 *A Pé* e 🚲 *Bike*.
+   - **Simulador de Ingresso Digital (Ticket Pass):** Modal com passe digital e QR Code verificado.
+
 6. **Área de Parceiros B2B (Organizadores, Artistas e Marcas):**
    - Seletor de abas para produtores e marcas/patrocinadores.
    - Destaque para pagamentos e repasses seguros via **Mercado Pago** e **Stripe**.
@@ -67,7 +73,8 @@ A página é uma **Single-Page Application (SPA)** responsiva e de alta convers�
 
 - **HTML5 Semântico:** Estrutura acessível, otimizada para SEO e OpenGraph tags para compartilhamento em redes sociais.
 - **CSS3 Moderno:** Flexbox, CSS Grid, Custom Properties (variáveis), animações fluidas e design 100% responsivo (Mobile-First).
-- **JavaScript Vanilla (ES6+):** Sem dependências externas pesadas para garantir carregamento ultra-rápido (Core Web Vitals nota máxima).
+- **JavaScript & Leaflet.js:** Mapa interativo real com OpenStreetMap e CartoDB (sem chaves de API pagas ou restrições de domínio).
+- **Geolocalização Nativa (HTML5 Geolocation API):** Detecção precisa da posição do usuário em tempo real.
 - **Tipografia:** Google Fonts (*Plus Jakarta Sans*).
 - **Controle de Versão:** Git & GitHub.
 - **Deploy:** GitHub Pages com certificado SSL nativo gratuito.

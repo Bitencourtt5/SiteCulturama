@@ -19,6 +19,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap" rel="stylesheet">
 
+  <!-- Leaflet Map CSS (Free, Open-Source, No API Key Required) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -436,25 +439,25 @@
   </section>
 
   <!-- ==========================================================================
-       5. LIVE INTERACTIVE MAP SHOWCASE (Demonstração do App)
+       5. LIVE INTERACTIVE MAP SHOWCASE (Demonstração Interativa do App)
        ========================================================================== -->
   <section class="section section-dark-deep map-showcase-section" id="mapa-ao-vivo">
     <div class="container">
       <div class="section-header">
-        <div class="badge badge-dark">Experimente Agora</div>
-        <h2 class="section-title">Navegue pelo mapa em tempo real</h2>
+        <div class="badge badge-dark">Experimente a Tecnologia Culturama</div>
+        <h2 class="section-title">Mapa Cultural Interativo em Tempo Real</h2>
         <p class="section-desc">
-          Clique nos pontos culturais abaixo para simular a experiência do aplicativo Culturama.
+          Explore o mapa abaixo: clique nos eventos, alterne modos de visualização, ajuste seu raio de distância, mude o meio de transporte e simule rotas até o evento.
         </p>
       </div>
 
       <div class="map-showcase-container">
         
-        <!-- Controls Bar -->
+        <!-- Controls Top Bar: Category Filters & Search -->
         <div class="map-controls-bar">
           <div class="map-category-pills">
-            <button class="category-pill active" data-category="todos">Todos os Eventos</button>
-            <button class="category-pill" data-category="musica">🎵 Música & Shows</button>
+            <button class="category-pill active" data-category="todos">Todos os Eventos (<span id="countTodos">8</span>)</button>
+            <button class="category-pill" data-category="musica">🎵 Shows & Música</button>
             <button class="category-pill" data-category="artes">🎨 Artes Visuais</button>
             <button class="category-pill" data-category="teatro">🎭 Teatro & Dança</button>
             <button class="category-pill" data-category="gastronomia">🍲 Gastronomia</button>
@@ -466,30 +469,82 @@
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <input type="text" id="mapSearchInput" placeholder="Filtrar por nome ou local...">
+            <input type="text" id="mapSearchInput" placeholder="Buscar por nome, bairro ou atração...">
           </div>
         </div>
 
-        <!-- Interactive Map Layout -->
-        <div class="interactive-map-area">
+        <!-- Secondary Filter & Toolbar: Quick Filters, Distance Radius, GPS & Map Layers -->
+        <div class="map-secondary-toolbar">
           
-          <!-- Simulation Canvas -->
-          <div class="map-simulation-canvas" id="mapSimulationCanvas">
-            <div class="map-road road-h"></div>
-            <div class="map-road road-v"></div>
-            <div class="map-road road-diag"></div>
-            <!-- Dynamic markers injected via JavaScript -->
+          <!-- Browser Real GPS & Location Tools -->
+          <div class="gps-location-toolbar">
+            <button class="btn-gps-locate" id="btnGetRealLocation" title="Usar GPS do seu Navegador / Celular">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3m0 14v3M2 12h3m14 0h3"></path></svg>
+              <span>Usar Meu GPS Real</span>
+            </button>
+            <button class="btn-gps-preset active" id="btnPresetPaulista" title="Centrar na Av. Paulista, SP">
+              📍 Av. Paulista (Demo)
+            </button>
+            <span class="user-location-badge" id="userLocationBadge">📍 Você em: Av. Paulista (MASP)</span>
           </div>
 
-          <!-- Live Event Sidebar -->
+          <!-- Quick Filter Tags -->
+          <div class="quick-filter-group">
+            <span class="quick-filter-label">Filtros:</span>
+            <button class="quick-filter-btn active" data-quick="all">Todos</button>
+            <button class="quick-filter-btn" data-quick="today">⚡ Hoje</button>
+            <button class="quick-filter-btn" data-quick="free">🎟️ Gratuitos</button>
+            <button class="quick-filter-btn" data-quick="trending">🔥 Em Alta</button>
+          </div>
+
+          <!-- Distance Radius Slider Control -->
+          <div class="radius-control-box">
+            <div class="radius-header">
+              <span class="radius-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+                Raio: <strong id="radiusValueLabel">10 km</strong>
+              </span>
+            </div>
+            <input type="range" id="mapRadiusSlider" class="radius-slider" min="1" max="25" value="10" step="1">
+          </div>
+
+          <!-- Map View Layers / Theme Mode -->
+          <div class="map-layer-selector">
+            <button class="layer-btn active" data-layer="dark" title="Modo Noturno (CartoDB Dark Matter)">🌙 Noturno</button>
+            <button class="layer-btn" data-layer="hot" title="Modo Cultural Vibrante (OSM Hot)">🔥 Cultural</button>
+            <button class="layer-btn" data-layer="voyager" title="Modo Urbano Detalhado">🗺️ Urbano</button>
+          </div>
+        </div>
+
+        <!-- Interactive Map Layout (Real Leaflet Map + Sidebar) -->
+        <div class="interactive-map-area">
+          
+          <!-- Real Leaflet Map Container -->
+          <div class="map-wrapper-relative">
+            <div id="realLeafletMap" class="real-leaflet-map"></div>
+
+            <!-- Floating Quick Guide Pill -->
+            <div class="map-instruction-pill">
+              <span>💡 Dica: Arraste o mapa, clique nos eventos ou clique em qualquer rua para mudar sua posição</span>
+            </div>
+          </div>
+
+          <!-- Live Event Details & Interactive Route Sidebar -->
           <div class="map-event-sidebar">
-            <div>
-              <span class="sidebar-event-badge" id="sideEventBadge">🎵 Música & Shows</span>
+            <div class="sidebar-scrollable-content">
+              
+              <!-- Active Event Header Badge & Title -->
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <span class="sidebar-event-badge" id="sideEventBadge">🎵 Shows & Música</span>
+                <span class="event-live-status-pill" id="sideEventLiveStatus">🔥 Em Alta</span>
+              </div>
+
               <h3 class="sidebar-event-title" id="sideEventTitle">Festival de Jazz na Paulista</h3>
               <p class="sidebar-event-desc" id="sideEventDesc">
                 O maior encontro de jazz instrumental a céu aberto de São Paulo. Food trucks temáticos, palcos simultâneos e curadoria de alta qualidade.
               </p>
 
+              <!-- Event Attributes -->
               <div class="sidebar-event-details">
                 <div class="detail-row">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -497,7 +552,7 @@
                 </div>
                 <div class="detail-row">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                  <span id="sideEventLocation">Av. Paulista, altura do MASP - São Paulo</span>
+                  <span id="sideEventLocation">Av. Paulista, altura do MASP - Bela Vista</span>
                 </div>
                 <div class="detail-row">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><line x1="12" y1="18" x2="12" y2="20"></line><line x1="12" y1="4" x2="12" y2="6"></line></svg>
@@ -505,27 +560,61 @@
                 </div>
               </div>
 
-              <!-- Verified Badge -->
+              <!-- Verified Organizer Trust Card -->
               <div class="verified-organizer-box">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3EB8A0" stroke-width="2.5">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3EB8A0" stroke-width="2.5">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                   <polyline points="9 12 11 14 15 10"></polyline>
                 </svg>
                 <div>
                   <div style="font-weight: 700;" id="sideEventOrganizer">Instituto Cultural Harmonia</div>
-                  <div style="font-size: 0.7rem; opacity: 0.8;" id="sideEventDoc">CNPJ Verificado: 34.***.***/0001-90</div>
+                  <div style="font-size: 0.72rem; opacity: 0.85;" id="sideEventDoc">CNPJ Verificado: 34.***.***/0001-90</div>
                 </div>
               </div>
+
+              <!-- Interactive Multimodal Transport Selector -->
+              <div class="transport-routes-container">
+                <div class="transport-header-label">Como Chegar (Tempo Estimado em Tempo Real):</div>
+                
+                <div class="transport-tabs">
+                  <button class="transport-tab active" data-mode="metro" title="Ir de Metrô">
+                    <span class="transport-icon">🚇</span>
+                    <span class="transport-name">Metrô</span>
+                  </button>
+                  <button class="transport-tab" data-mode="car" title="Ir de Carro / Uber">
+                    <span class="transport-icon">🚗</span>
+                    <span class="transport-name">Carro</span>
+                  </button>
+                  <button class="transport-tab" data-mode="walk" title="Ir a Pé">
+                    <span class="transport-icon">🚶</span>
+                    <span class="transport-name">A Pé</span>
+                  </button>
+                  <button class="transport-tab" data-mode="bike" title="Ir de Bike">
+                    <span class="transport-icon">🚲</span>
+                    <span class="transport-name">Bike</span>
+                  </button>
+                </div>
+
+                <!-- Dynamic Route Details Panel -->
+                <div class="route-details-panel" id="routeDetailsPanel">
+                  <div class="route-main-time" id="routeTimeDisplay">4 min de trajeto</div>
+                  <div class="route-instructions" id="routeInstructionDisplay">
+                    Estação Trianon-MASP (Linha 2-Verde) • Desembarque na saída Av. Paulista
+                  </div>
+                </div>
+              </div>
+
             </div>
 
-            <!-- Route CTA -->
-            <div>
-              <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: #9CA3AF; margin-bottom: 12px;">
-                <span>🚇 Metrô: <strong id="sideRouteMetro" style="color: #FFF;">4 min</strong></span>
-                <span>🚗 Carro: <strong id="sideRouteCar" style="color: #FFF;">12 min</strong></span>
-              </div>
-              <button class="btn btn-primary" style="width: 100%;" data-action="download-app">
-                Ver Rotas & Ingressos no App
+            <!-- Action Buttons: Ticket & Agenda -->
+            <div class="sidebar-actions-group">
+              <button class="btn btn-primary" id="btnOpenTicketModal" style="width: 100%;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"></path></svg>
+                Garantir Ingresso / Ver no App
+              </button>
+              <button class="btn btn-outline-copper btn-sm" id="btnSaveAgenda" style="width: 100%; justify-content: center; margin-top: 8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                <span id="saveAgendaText">Salvar na Minha Agenda</span>
               </button>
             </div>
           </div>
@@ -535,6 +624,84 @@
       </div>
     </div>
   </section>
+
+  <!-- ==========================================================================
+       MODAL: SIMULADOR DE INGRESSO / TICKET VIRTUAL
+       ========================================================================== -->
+  <div class="modal-backdrop" id="ticketSimModal">
+    <div class="modal-content" style="max-width: 480px;">
+      <button class="modal-close" aria-label="Fechar Modal">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+
+      <div class="ticket-modal-inner">
+        <div class="badge badge-pulse" style="margin-bottom: 12px;">Ingresso Verificado Culturama</div>
+        <h3 class="sidebar-event-title" id="modalTicketTitle">Festival de Jazz na Paulista</h3>
+        <p style="font-size: 0.85rem; color: #B8BCC6; margin-bottom: 18px;" id="modalTicketMeta">📍 Av. Paulista • 🕒 Hoje às 19:30</p>
+
+        <!-- Visual Ticket Pass Stub -->
+        <div class="virtual-ticket-stub">
+          <div class="stub-header">
+            <div class="logo-wrapper" style="font-size: 1rem;">
+              <div class="logo-icon" style="width: 28px; height: 28px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path></svg>
+              </div>
+              <span>culturama pass</span>
+            </div>
+            <span class="stub-status">CONFIRMADO</span>
+          </div>
+
+          <div class="stub-body">
+            <div class="stub-field">
+              <span class="stub-label">TITULAR</span>
+              <strong class="stub-val">Você (Acesso Digital)</strong>
+            </div>
+            <div class="stub-field">
+              <span class="stub-label">VALOR</span>
+              <strong class="stub-val" id="modalTicketPrice">Gratuito</strong>
+            </div>
+            <div class="stub-field">
+              <span class="stub-label">PORTÃO / ACESSO</span>
+              <strong class="stub-val">Entrada Principal A</strong>
+            </div>
+            <div class="stub-field">
+              <span class="stub-label">PAGAMENTO / VALIDAÇÃO</span>
+              <strong class="stub-val" style="color: #3EB8A0;">Stripe / Mercado Pago 🔒</strong>
+            </div>
+          </div>
+
+          <div class="stub-qr-section">
+            <svg class="stub-qr-code" viewBox="0 0 100 100" fill="#1C1F26">
+              <rect width="100" height="100" fill="#FFFFFF"/>
+              <rect x="10" y="10" width="24" height="24" fill="#C3724B"/>
+              <rect x="14" y="14" width="16" height="16" fill="#FFFFFF"/>
+              <rect x="18" y="18" width="8" height="8" fill="#1C1F26"/>
+              <rect x="66" y="10" width="24" height="24" fill="#C3724B"/>
+              <rect x="70" y="14" width="16" height="16" fill="#FFFFFF"/>
+              <rect x="74" y="18" width="8" height="8" fill="#1C1F26"/>
+              <rect x="10" y="66" width="24" height="24" fill="#C3724B"/>
+              <rect x="14" y="70" width="16" height="16" fill="#FFFFFF"/>
+              <rect x="18" y="74" width="8" height="8" fill="#1C1F26"/>
+              <rect x="42" y="14" width="6" height="6"/>
+              <rect x="52" y="22" width="6" height="6"/>
+              <rect x="42" y="32" width="6" height="6"/>
+              <rect x="66" y="42" width="6" height="6"/>
+              <rect x="52" y="52" width="6" height="6"/>
+              <rect x="42" y="66" width="6" height="6"/>
+              <rect x="52" y="76" width="6" height="6"/>
+              <rect x="66" y="66" width="6" height="6"/>
+              <rect x="76" y="76" width="6" height="6"/>
+            </svg>
+            <span style="font-size: 0.72rem; color: #9CA3AF;">Apresente este QR Code na entrada do evento</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg" style="width: 100%; margin-top: 18px;" data-action="download-app">
+          Baixar App para Salvar na Carteira
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ==========================================================================
        6. B2B & PARTNERS SECTION (Para Organizadores, Artistas e Marcas)
@@ -1047,6 +1214,9 @@
       </p>
     </div>
   </div>
+
+  <!-- Leaflet Map JS (Free, Open-Source, No API Key Required) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
   <!-- Custom Scripts -->
   <script src="js/app.js"></script>
